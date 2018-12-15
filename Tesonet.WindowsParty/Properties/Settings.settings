@@ -1,0 +1,15 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Tesonet.WindowsParty.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="BaseServiceUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://playground.tesonet.lt/v1/</Value>
+    </Setting>
+    <Setting Name="AuthentificationAction" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">tokens</Value>
+    </Setting>
+    <Setting Name="ServerListAction" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">servers</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

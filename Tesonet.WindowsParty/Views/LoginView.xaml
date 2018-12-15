@@ -1,0 +1,50 @@
+﻿<Page x:Class="Tesonet.WindowsParty.Views.LoginView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Tesonet.WindowsParty.Views"
+        mc:Ignorable="d"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+        xmlns:cal="http://www.caliburnproject.org"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        Title="LoginView">
+    <Grid Background="{StaticResource brushWindowBackground}">
+        <Image Source="/Images/background.png" Stretch="UniformToFill"/>
+        <Grid VerticalAlignment="Center">
+            <StackPanel HorizontalAlignment="Center">
+                <Image Source="{StaticResource imageLogotypeTestio}" Width="246" Margin="70"/>
+                <Border Style="{StaticResource inputBorder}">
+                    <xctk:WatermarkTextBox x:Name="UserName" Style="{StaticResource inputTextBox}" Foreground="{StaticResource brushInputForeground}">
+                        <xctk:WatermarkTextBox.Watermark>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="{StaticResource icoUserName}" Stretch="None" />
+                                <TextBlock Text="Username" Margin="10,0,0,0"/>
+                            </StackPanel>
+                        </xctk:WatermarkTextBox.Watermark>
+                    </xctk:WatermarkTextBox>
+                </Border>
+                <Border Style="{StaticResource inputBorder}">
+                    <xctk:WatermarkPasswordBox x:Name="Password" Style="{StaticResource inputTextBox}">
+                        <xctk:WatermarkPasswordBox.Watermark>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="{StaticResource icoLock}" Stretch="None" />
+                                <TextBlock Text="Password" Margin="10,0,0,0"/>
+                            </StackPanel>
+                        </xctk:WatermarkPasswordBox.Watermark>
+                    </xctk:WatermarkPasswordBox>
+                </Border>
+                <Button Content="Log In" Style="{StaticResource button}" IsDefault="True" >
+                    <i:Interaction.Triggers>
+                        <i:EventTrigger EventName="Click">
+                            <cal:ActionMessage MethodName="Login">
+                                <cal:Parameter Value="{Binding ElementName=UserName, Path=Text}" />
+                                <cal:Parameter Value="{Binding Password}" />
+                            </cal:ActionMessage>
+                        </i:EventTrigger>
+                    </i:Interaction.Triggers>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>
