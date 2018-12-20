@@ -49,5 +49,23 @@ namespace Tesonet.WindowsParty.Properties {
                 return ((string)(this["ServerListAction"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Logs\\Error.log")]
+        public string ErrorLogFile {
+            get {
+                return ((string)(this["ErrorLogFile"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Logs\\Trace.log")]
+        public string TraceLogFile {
+            get {
+                return ((string)(this["TraceLogFile"]));
+            }
+        }
     }
 }

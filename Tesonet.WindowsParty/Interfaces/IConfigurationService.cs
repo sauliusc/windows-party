@@ -11,5 +11,7 @@ namespace Tesonet.WindowsParty.Interfaces
         string BaseServiceUrl { get; }
         string AuthentificationAction { get; }
         string ServerListAction { get; }
+        string TraceLogFile { get; }
+        string ErrorLogFile { get; }
     }
 }

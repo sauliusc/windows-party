@@ -32,5 +32,20 @@ namespace Tesonet.WindowsParty.Services
                 return Properties.Settings.Default.ServerListAction;
             }
         }
+
+        public string TraceLogFile
+        {
+            get
+            {
+                return Properties.Settings.Default.TraceLogFile;
+            }
+        }
+        public string ErrorLogFile
+        {
+            get
+            {
+                return Properties.Settings.Default.ErrorLogFile;
+            }
+        }
     }
 }

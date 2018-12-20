@@ -15,6 +15,10 @@ namespace Tesonet.WindowsParty.Tests
 
         public string ServerListAction { get; private set; }
 
+        public string TraceLogFile => throw new NotImplementedException();
+
+        public string ErrorLogFile => throw new NotImplementedException();
+
         public void Setup(string service, string authentificationAction, string serverListAction)
         {
             BaseServiceUrl = service;

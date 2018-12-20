@@ -9,19 +9,21 @@ using Tesonet.WindowsParty.Events;
 
 namespace Tesonet.WindowsParty.ViewModels
 {
-    public class ShellViewModel : Screen, IHandle<UserActionEvent>
+    public class ShellViewModel : Conductor<Screen>.Collection.OneActive, IHandle<UserActionEvent>
     {
         #region Fields
         IEventAggregator _eventAggregator;
-        INavigationService _navigationService;
+        LoginViewModel _loginViewModel;
+        ServerListViewModel _serverModel;
         #endregion
 
         #region Constructors
-        public ShellViewModel(IEventAggregator eventAggregator)
+        public ShellViewModel(IEventAggregator eventAggregator, LoginViewModel loginViewModel, ServerListViewModel serverModel)
         {
             _eventAggregator = eventAggregator;
-            IoC.Get<IAuthentificationService>().SetActionAfterLogin(() => _eventAggregator.PublishOnUIThread(new UserActionEvent(UserAction.Login)));
             _eventAggregator.Subscribe(this);
+            _loginViewModel = loginViewModel;
+            _serverModel = serverModel;
         }
         #endregion
 
@@ -31,21 +33,22 @@ namespace Tesonet.WindowsParty.ViewModels
             switch (message.UserAction)
             {
                 case UserAction.Login:
-                    _navigationService.NavigateToViewModel<ServerListViewModel>();
+                    ActivateItem(_serverModel);
                     break;
                 case UserAction.Logout:
                     IoC.Get<IAuthentificationService>().Logout();
-                    _navigationService.GoBack();
+                    ActivateItem(_loginViewModel);
+                    _loginViewModel.ClearInput();
                     break;
                 default:
                     break;
             }
         }
 
-        public void RegisterFrame(Frame frame)
+        protected override void OnInitialize()
         {
-            _navigationService = new FrameAdapter(frame);
-            _navigationService.NavigateToViewModel<LoginViewModel>();
+            base.OnInitialize();
+            ActivateItem(_loginViewModel);
         }
         #endregion
     }

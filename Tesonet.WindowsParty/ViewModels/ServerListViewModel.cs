@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Tesonet.WindowsParty.Events;
 using Tesonet.WindowsParty.Model;
@@ -17,6 +18,7 @@ namespace Tesonet.WindowsParty.ViewModels
         IDataService _dataService;
         bool _isDataLoading;
         Server _selectedServer;
+        CancellationTokenSource _cancellationTokenSource;
         #endregion
 
         #region Properties 
@@ -46,41 +48,48 @@ namespace Tesonet.WindowsParty.ViewModels
             _eventAggregator = eventAggregator;
             _dataService = dataService;
             Servers = new ObservableCollection<Server>();
-            _dataService.SetRefreshServerListCompleteAction(RefreshServerListCompleted);
         }
         #endregion
 
         #region Public methods
-        protected override void OnViewLoaded(object view)
+
+        protected override void OnActivate()
         {
-            base.OnViewLoaded(view);
-            RefreshSrverList();
+            RefreshServerList();
+            base.OnActivate();
         }
 
         public void Logout()
         {
+            if (_cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Cancel();
+            }
             _eventAggregator.PublishOnUIThread(new UserActionEvent(UserAction.Logout));
         }
 
-        public void RefreshSrverList()
+        public async void RefreshServerList()
         {
             IsDataLoading = true;
-            _dataService.RefreshServerList();
-        }
-
-        public void RefreshServerListCompleted(IEnumerable<Server> servers)
-        {
-            IoC.Get<IInvoker>().InvokeIfRequired(
-                () =>
+            _cancellationTokenSource = new CancellationTokenSource();
+            try
+            {
+                var loadedServers = await _dataService.GetServerList(_cancellationTokenSource.Token);
+                Servers.Clear();
+                if (loadedServers != null)
                 {
-                    Servers.Clear();
-                    if (servers != null)
-                    {
-                        foreach (var server in servers)
-                            Servers.Add(server);
-                    }
-                    IsDataLoading = false;
-                });
+                    foreach (var server in loadedServers)
+                        Servers.Add(server);
+                }
+            } catch (TaskCanceledException)
+            {
+                LogManager.GetLog(this.GetType()).Info("Server list action cancelled by user");
+            }
+            finally
+            {
+                _cancellationTokenSource = null;
+                IsDataLoading = false;
+            }
         }
         #endregion
     }

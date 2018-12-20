@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Tesonet.WindowsParty.Interfaces;
 using Tesonet.WindowsParty.Model;
+using Flurl;
+using Flurl.Http;
+using System.Threading;
 
 namespace Tesonet.WindowsParty.Services
 {
@@ -17,56 +19,43 @@ namespace Tesonet.WindowsParty.Services
         #region fields
         IAuthentificationService _authentificationService;
         IConfigurationService _configurationService;
-        Action<IEnumerable<Server>> _refreshServerListCompleteAction;
-        bool _executeAsync;
-        RestClient _client;
+        IInvoker _invoker;
         #endregion
 
         #region constructors
-        public DataService(IAuthentificationService authentificationService, IConfigurationService configurationService, bool executeAsync = true)
+        public DataService(IAuthentificationService authentificationService, IConfigurationService configurationService, IInvoker invoker)
         {
             _authentificationService = authentificationService;
             _configurationService = configurationService;
-            _client = new RestClient(configurationService.BaseServiceUrl);
-            _executeAsync = executeAsync;
+            _invoker = invoker;
         }
         #endregion
 
         #region public methods
-        public void RefreshServerList()
+        public async Task<IEnumerable<Server>> GetServerList(CancellationToken cancellationToken)
         {
-            var request = new RestRequest(_configurationService.ServerListAction);
-            request.RequestFormat = DataFormat.Json;
-            request.Method = Method.GET;
-            request.AddHeader("Authorization", $"Bearer {_authentificationService.SecurityToken}");
-            if (_executeAsync)
+            try
             {
-                _client.ExecuteAsync(request, OnGetServerList);
-            } else
+                var serverList = await _configurationService.BaseServiceUrl.WithOAuthBearerToken(_authentificationService.SecurityToken)
+                                                            .AppendPathSegment(_configurationService.ServerListAction).GetJsonAsync<IEnumerable<Server>>(cancellationToken);
+#if DEBUG
+                await Task.Delay(1000, cancellationToken);
+#endif
+                return serverList;
+            }
+            catch (TaskCanceledException)
             {
-                OnGetServerList(_client.Execute(request));
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _invoker.InvokeIfRequired(() => throw ex);
+                return null;
             }
         }
-        public void SetRefreshServerListCompleteAction(Action<IEnumerable<Server>> action)
-        {
-            _refreshServerListCompleteAction = action;
-        }
-        #endregion
+#endregion
 
-        #region private methods
-        private void OnGetServerList(IRestResponse response)
-        {
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var servers = JsonConvert.DeserializeObject<List<Server>>(response.Content);
-                servers.Add(new Server() { Name = "Saulius #1 wpf developer", Distance = 1 });
-                _refreshServerListCompleteAction.Invoke(servers);
-            }
-            else
-            {
-                _refreshServerListCompleteAction.Invoke(null);
-            }
-        }
-        #endregion
+#region private methods
+#endregion
     }
 }

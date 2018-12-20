@@ -11,5 +11,11 @@
     <Setting Name="ServerListAction" Type="System.String" Scope="Application">
       <Value Profile="(Default)">servers</Value>
     </Setting>
+    <Setting Name="ErrorLogFile" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Logs\Error.log</Value>
+    </Setting>
+    <Setting Name="TraceLogFile" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Logs\Trace.log</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

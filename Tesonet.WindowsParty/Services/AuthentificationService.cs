@@ -1,32 +1,31 @@
-﻿using Newtonsoft.Json;
+﻿using Flurl;
+using Flurl.Http;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Tesonet.WindowsParty.Interfaces;
+using Tesonet.WindowsParty.Model;
 
 namespace Tesonet.WindowsParty.Services
 {
     public class AuthentificationService : IAuthentificationService
     {
         #region Fields
-        Action _actionAfterLogin;
         IConfigurationService _configurationService;
-        RestClient _client;
-        bool _executeAsync;
         IInvoker _invoker;
         #endregion
 
         #region Constructors
-        public AuthentificationService(IConfigurationService configurationService, IInvoker invoker, bool executeAsync = true)
+        public AuthentificationService(IConfigurationService configurationService, IInvoker invoker)
         {
             _configurationService = configurationService;
-            _client = new RestClient(configurationService.BaseServiceUrl);
             _invoker = invoker;
-            _executeAsync = executeAsync;
         }
         #endregion
 
@@ -36,18 +35,39 @@ namespace Tesonet.WindowsParty.Services
         #endregion
 
         #region public methods
-        public void Login(string username, string password)
+        public async Task<bool> Login(string username, string password, CancellationToken cancellationToken)
         {
-            var request = new RestRequest(_configurationService.AuthentificationAction);
-            request.RequestFormat = DataFormat.Json;
-            request.Method = Method.POST;
-            request.AddBody(new { username, password });
-            if (_executeAsync)
+            try
             {
-                RestRequestAsyncHandle va = _client.ExecuteAsync(request, OnLoginResult);
-            } else
+                var tokenResponse = await _configurationService.BaseServiceUrl
+                .WithHeader("Content-Type", "application/json")
+                                                    .AppendPathSegment(_configurationService.AuthentificationAction)
+                                                    .PostJsonAsync(new { username, password }, cancellationToken).ReceiveJson<LoginToken>();
+
+                SecurityToken = tokenResponse.Token;
+                if (string.IsNullOrEmpty(SecurityToken))
+                {
+                    throw new Exception("Login failed");
+                }
+#if DEBUG
+                await Task.Delay(1000, cancellationToken);
+#endif
+                return true;
+            }
+            catch (TaskCanceledException)
             {
-                OnLoginResult(_client.Execute(request));
+                throw;
+            }
+            catch (FlurlHttpException)
+            {
+                //full error loged by flurUrl. raising user friendly exception
+                _invoker.InvokeIfRequired(() => throw new Exception("Login failed"));
+               return false;
+            }
+            catch (Exception ex)
+            {
+                _invoker.InvokeIfRequired(() => throw ex);
+                return false;
             }
         }
 
@@ -55,37 +75,7 @@ namespace Tesonet.WindowsParty.Services
         {
             SecurityToken = null;
         }
-
-        public void SetActionAfterLogin(Action actionAfterLogin)
-        {
-            _actionAfterLogin = actionAfterLogin;
-        }
-        #endregion
-
-        #region private methods
-        private void OnLoginResult(IRestResponse response)
-        {
-            try
-            {
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    JObject responseObject = JObject.Parse(response.Content);
-                    SecurityToken = (string)responseObject["token"];
-                    _actionAfterLogin.Invoke();
-                }
-                else
-                {
-                    throw new Exception("Login failed");
-                }
-            }catch (Exception ex)
-            {
-                _invoker.InvokeIfRequired(
-                () =>
-                {
-                    throw ex;
-                });
-            }
-        }
+        
         #endregion
     }
 }

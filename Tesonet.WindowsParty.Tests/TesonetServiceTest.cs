@@ -2,6 +2,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tesonet.WindowsParty.Services;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Tesonet.WindowsParty.Tests
 {
@@ -12,37 +14,40 @@ namespace Tesonet.WindowsParty.Tests
         private const string _testPassword = "partyanimal";
         TestConfigurationService _configuration;
         IAuthentificationService _authentification;
+        CancellationTokenSource _cancellationTokenSource;
+        IInvoker _invoker;  
 
         [TestInitialize]
         public void Setup()
         {
+            _invoker = new TestInvoker();
             _configuration = new TestConfigurationService();
             _configuration.Setup("http://playground.tesonet.lt/v1/", "tokens", "servers");
-            _authentification = new AuthentificationService(_configuration, new TestInvoker(), false);
+            _authentification = new AuthentificationService(_configuration, _invoker);
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
         [TestMethod]
-        public void TestLoginSuccess()
+        public async Task TestLoginSuccess()
         {
-            _authentification.SetActionAfterLogin(() => Assert.IsTrue(_authentification.IsUserLoggedIn, "AuthentificationService failed authorize user"));
-            _authentification.Login(_testUser, _testPassword);
+            var result = await _authentification.Login(_testUser, _testPassword, _cancellationTokenSource.Token);
+            Assert.IsTrue(_authentification.IsUserLoggedIn, "AuthentificationService failed authorize user");
         }
 
         [TestMethod]
         [ExpectedException(typeof(Exception), "AuthentificationService approved wrong user")]
-        public void TestLoginFailed()
+        public async Task TestLoginFailed()
         {
-            _authentification.SetActionAfterLogin(() => { return; });
-            _authentification.Login(_testUser, "partya");
+            var result = await _authentification.Login(_testUser, "partya", _cancellationTokenSource.Token);
         }
 
         [TestMethod]
-        public void TestServerListGet()
+        public async Task TestServerListGet()
         {
-            _authentification.SetActionAfterLogin(() => { return; });
-            _authentification.Login(_testUser, _testPassword);
-            IDataService dataService = new DataService(_authentification, _configuration, false);
-            dataService.SetRefreshServerListCompleteAction((a) => { Assert.AreEqual(a.Count(), 0, "Server list not returned data"); });
-        }
+            await _authentification.Login(_testUser, _testPassword, _cancellationTokenSource.Token);
+            IDataService dataService = new DataService(_authentification, _configuration, _invoker);
+            var serverList = await dataService.GetServerList(_cancellationTokenSource.Token);
+            Assert.AreNotEqual(0, serverList.Count(), "Server list not returned data");
+            }
     }
 }

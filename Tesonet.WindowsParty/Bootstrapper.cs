@@ -13,6 +13,7 @@ using Tesonet.WindowsParty.Services;
 using Tesonet.WindowsParty.ViewModels;
 using Tesonet.WindowsParty.Input;
 using Xceed.Wpf.Toolkit;
+using Flurl.Http;
 
 namespace Tesonet.WindowsParty
 {
@@ -20,6 +21,7 @@ namespace Tesonet.WindowsParty
     {
         #region fields
         private SimpleContainer _container;
+        private ILog _logger;
         #endregion
 
         #region Constructors
@@ -49,14 +51,15 @@ namespace Tesonet.WindowsParty
            PasswordBoxHelper.BoundPasswordProperty,
            "Password",
            "PasswordChanged");
-
-            //LogManager.GetLog = type => new DebugLogService(type);
-            LogManager.GetLog = type => new Log4netService(type);
+           
             InitKeyGesture();
         }
 
         protected override void OnStartup(object sender, StartupEventArgs e)
         {
+            LogManager.GetLog = type => new SerilogLogService(type, IoC.Get<IConfigurationService>());
+            _logger = LogManager.GetLog(this.GetType());
+            InitHttpClient();
             DisplayRootViewFor<ShellViewModel>();
             Application.MainWindow.Closing += MainWindow_Closing;
         }
@@ -84,7 +87,7 @@ namespace Tesonet.WindowsParty
         protected override void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             e.Handled = true;
-            LogManager.GetLog(typeof(ShellViewModel)).Error(e.Exception);
+            _logger.Error(e.Exception);
             Xceed.Wpf.Toolkit.MessageBox.Show(Application.MainWindow, e.Exception.Message, "Ooops, something went wrong...", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         #endregion
@@ -119,6 +122,16 @@ namespace Tesonet.WindowsParty
 
                 return defaultCreateTrigger(target, triggerText);
             };
+        }
+
+        private void InitHttpClient()
+        {
+            FlurlHttp.ConfigureClient(IoC.Get<IConfigurationService>().BaseServiceUrl, cli => cli
+                .Configure(settings =>
+                {
+                    settings.BeforeCall = call => _logger.Info($"Calling {call.Request.RequestUri}");
+                    settings.OnError = call => _logger.Error(call.Exception);
+                }));
         }
         #endregion
     }

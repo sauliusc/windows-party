@@ -1,4 +1,4 @@
-﻿<Page x:Class="Tesonet.WindowsParty.Views.ServerListView"
+﻿<UserControl  x:Class="Tesonet.WindowsParty.Views.ServerListView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,11 +6,10 @@
         xmlns:local="clr-namespace:Tesonet.WindowsParty.Views"
         xmlns:models="clr-namespace:Tesonet.WindowsParty.Model"
         mc:Ignorable="d"
-        Title="ServerListView" 
         d:DesignHeight="500" d:DesignWidth="600"
         xmlns:cal="http://www.caliburnproject.org"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-        cal:Message.Attach="[Gesture F5] = [Action RefreshSrverList()];">
+        cal:Message.Attach="[Gesture F5] = [Action RefreshServerList()];">
     <Grid  Background="{StaticResource brushDefaultForeground}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -69,4 +68,4 @@
             </xctk:BusyIndicator>
         </Grid>
     </Grid>
-</Page>
+</UserControl>

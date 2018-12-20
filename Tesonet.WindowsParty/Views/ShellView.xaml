@@ -9,6 +9,6 @@
         Title="Tesonet WindowsParty (Hire me :) )" Height="780" Width="1460"
         WindowStartupLocation="CenterScreen">
     <Grid Background="{StaticResource brushWindowBackground}">
-        <Frame cal:Message.Attach="RegisterFrame($source)" DataContext="{x:Null}" NavigationUIVisibility="Hidden" Source="LoginView" />
+        <ContentControl x:Name="ActiveItem" />
     </Grid>
 </Window>

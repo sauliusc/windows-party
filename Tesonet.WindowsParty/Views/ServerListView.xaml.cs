@@ -17,7 +17,7 @@ namespace Tesonet.WindowsParty.Views
     /// <summary>
     /// Interaction logic for ServerListView.xaml
     /// </summary>
-    public partial class ServerListView : Page
+    public partial class ServerListView : UserControl
     {
         public ServerListView()
         {
